@@ -4,11 +4,15 @@ app.use(express.json())
 
 app.get("/", (req, res) => {
   res.send({
-    info: "E-Commerce API is active",
+    info: "E-Commerce API is running successfully",
+    sampleData: {
+      productExample: { id: 1, name: "Laptop", price: 50000 },
+      orderExample: { id: 1, customerName: "John", items: ["Laptop"], status: "Pending" }
+    },
     availableRoutes: [
-      { method: "GET", path: "/products", description: "View all products" },
-      { method: "GET", path: "/orders", description: "View all orders" },
-      { method: "POST", path: "/orders", description: "Create a new order" },
+      { method: "GET", path: "/products", description: "View all available products" },
+      { method: "POST", path: "/orders", description: "Place a new order" },
+      { method: "GET", path: "/orders", description: "View all customer orders" },
       { method: "GET", path: "/orders/:id", description: "Track a specific order" },
       { method: "PUT", path: "/orders/:id", description: "Update order status" }
     ]
@@ -25,7 +29,11 @@ let orders = []
 let orderId = 1
 
 app.get("/products", (req, res) => {
-  res.json(products)
+  res.json({
+    message: "List of all available products",
+    count: products.length,
+    data: products
+  })
 })
 
 app.post("/orders", (req, res) => {
@@ -35,24 +43,31 @@ app.post("/orders", (req, res) => {
   }
   const order = { id: orderId++, customerName, items, status: "Pending" }
   orders.push(order)
-  res.json({ message: "Order created successfully", order })
+  res.json({ message: "Order placed successfully", order })
 })
 
 app.get("/orders", (req, res) => {
-  res.json(orders)
+  res.json({
+    message: "All placed orders",
+    totalOrders: orders.length,
+    orders
+  })
+})
+
+app.get("/orders/:id", (req, res) => {
+  const order = orders.find(o => o.id === parseInt(req.params.id))
+  if (!order) return res.status(404).json({ message: "Order not found" })
+  res.json({
+    message: "Order details found",
+    order
+  })
 })
 
 app.put("/orders/:id", (req, res) => {
   const order = orders.find(o => o.id === parseInt(req.params.id))
   if (!order) return res.status(404).json({ message: "Order not found" })
   order.status = req.body.status || order.status
-  res.json({ message: "Order status updated", order })
-})
-
-app.get("/orders/:id", (req, res) => {
-  const order = orders.find(o => o.id === parseInt(req.params.id))
-  if (!order) return res.status(404).json({ message: "Order not found" })
-  res.json(order)
+  res.json({ message: "Order status updated successfully", order })
 })
 
 app.listen(3000, () => {
